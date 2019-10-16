@@ -1,0 +1,112 @@
+\documentclass{article}
+
+\usepackage{hyperref}
+\usepackage{mathtools}
+
+\title{R1CS Programming \\ \large ZK0x04 Workshop Notes}
+\author{Daniel Lubarov \and Brendan Farmer}
+\date{\today}
+
+\DeclarePairedDelimiter\ceil{\lceil}{\rceil}
+\DeclarePairedDelimiter\floor{\lfloor}{\rfloor}
+
+% Hyperlink colors.
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    citecolor=blue,
+    urlcolor=blue,
+}
+
+% Tweak autoref names to use capitals.
+\renewcommand{\sectionautorefname}{Section}
+
+\begin{document}
+
+\maketitle
+
+{\hypersetup{hidelinks} \tableofcontents}
+\newpage
+
+
+\section{Multiplicative inverse} \label{sec:inverse}
+
+Deterministically computing $1 / x$ in an R1CS circuit would be expensive. Instead, we can have the prover compute $1 / x$ outside of the circuit and supply the result as a witness element, which we will call $x_\mathrm{inv}$. To verify the result, we enforce
+\begin{equation}
+  (x) (x_\mathrm{inv}) = (1)
+\end{equation}
+
+
+\section{Zero testing}
+
+To assert $x = 0$, we simply enforce
+\begin{equation}
+  (x) (1) = (0)
+\end{equation}
+Asserting $x \ne 0$ is similarly easy: we compute $1 / x$ (non-deterministically, as in \autoref{sec:inverse}). The result can be ignored; the mere fact that an inverse exists implies $x \ne 0$.
+
+On the other hand, if we want to \textit{evaluate}
+\begin{equation}
+  y =
+  \begin{cases}
+    0 & \text{if $x = 0$} \\
+    1 & \text{otherwise}
+  \end{cases}
+\end{equation}
+we can do so by introducing another variable $m$, and enforcing
+\begin{align}
+  (x) & (m) &= (y) \\
+  (1 - y) & (x) &= 0
+\end{align}
+This method is from \cite{parno2013pinocchio}.
+
+
+\section{Binary}
+
+To assert $b \in \{ 0, 1 \}$, we enforce
+\begin{equation}
+  (b) (b - 1) = (0)
+\end{equation}
+
+
+\section{Comparisons}
+
+TODO: Describe basic comparison algorithm
+
+TODO: Describe Ahmed's optimization
+
+A few other optimizations are possible in particular circumstances:
+\begin{enumerate}
+  \item To assert (not evaluate) $x < y$, we can split $x$ non-canonically and split $y$ canonically. The prover is forced to use $x$'s canonical representation anyway, otherwise $x_\mathrm{bin} \ge |F| > y_\mathrm{bin}$, making the assertion unsatisfiable.
+  \item To assert $x < c$ for some constant $c \ll |F|$, we can split $x$ into just $\ceil{\log_2(c)}$ bits.
+\end{enumerate}
+
+
+\section{Permutations}
+
+Say we want to verify that two sequences, $(x_1, \dots, x_n)$ and $(y_1, \dots, y_n)$, are permutations of one another.
+
+
+\section{Sorting}
+
+TODO: Discuss sorting networks
+
+TODO: Discuss permutation networks + comparisons to verify order
+
+
+\section{Random access}
+
+TODO: Discuss naive random access via index comparisons
+
+TODO: Discuss binary tree method
+
+
+\section{Embedded curve operations}
+
+TODO: Discuss basic embedded curve operations
+
+
+\bibliography{bibliography}{}
+\bibliographystyle{ieeetr}
+
+\end{document}
