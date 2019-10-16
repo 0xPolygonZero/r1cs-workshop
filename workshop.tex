@@ -47,19 +47,26 @@ To assert $x = 0$, we simply enforce
 Asserting $x \ne 0$ is similarly easy: we compute $1 / x$ (non-deterministically, as in \autoref{sec:inverse}). The result can be ignored; the mere fact that an inverse exists implies $x \ne 0$.
 
 On the other hand, if we want to \textit{evaluate}
-\begin{equation}
-  y =
+\begin{equation} \label{eq:nonzero}
+  y \coloneqq
   \begin{cases}
     0 & \text{if $x = 0$} \\
     1 & \text{otherwise}
   \end{cases}
 \end{equation}
-we can do so by introducing another variable $m$, and enforcing
+we can do so by introducing another variable, $m$, and enforcing
 \begin{alignat}{2}
   (x)     & (m) &&= (y) \\
   (1 - y) & (x) &&= (0)
 \end{alignat}
-TODO: Explain further.
+Outside of the circuit, the prover generates $y$ as in \autoref{eq:nonzero}, and generates $m$ as
+\begin{equation}
+  m \coloneqq
+  \begin{cases}
+    1 & \text{if $x = 0$} \\
+    y / x & \text{otherwise}
+  \end{cases}
+\end{equation}
 This method is from \cite{parno2013pinocchio}.
 
 
@@ -79,7 +86,7 @@ TODO: Describe basic comparison algorithm
 
 TODO: Describe Ahmed's optimization
 
-A few other optimizations are possible in particular circumstances:
+A couple other optimizations are possible in particular circumstances:
 \begin{enumerate}
   \item To assert (not evaluate) $x < y$, we can split $x$ non-canonically and split $y$ canonically. The prover is forced to use $x$'s canonical representation anyway, otherwise $x_\mathrm{bin} \ge |F| > y_\mathrm{bin}$, making the assertion unsatisfiable.
   \item To assert $x < c$ for some constant $c \ll |F|$, we can split $x$ into just $\ceil{\log_2(c)}$ bits.
