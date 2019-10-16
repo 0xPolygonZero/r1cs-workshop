@@ -1,5 +1,6 @@
 \documentclass{article}
 
+\usepackage{amsmath}
 \usepackage{hyperref}
 \usepackage{mathtools}
 
@@ -54,10 +55,10 @@ On the other hand, if we want to \textit{evaluate}
   \end{cases}
 \end{equation}
 we can do so by introducing another variable $m$, and enforcing
-\begin{align}
-  (x) & (m) &= (y) \\
-  (1 - y) & (x) &= 0
-\end{align}
+\begin{alignat}{2}
+  (x)     & (m) &&= (y) \\
+  (1 - y) & (x) &&= (0)
+\end{alignat}
 This method is from \cite{parno2013pinocchio}.
 
 
