@@ -3,6 +3,10 @@
 \usepackage{amsmath}
 \usepackage{hyperref}
 \usepackage{mathtools}
+\usepackage{tikz}
+
+\usetikzlibrary{arrows}
+\usetikzlibrary{positioning}
 
 \title{R1CS Programming \\ \large ZK0x04 Workshop Notes}
 \author{Daniel Lubarov \and Brendan Farmer}
@@ -73,29 +77,60 @@ This method is from \cite{parno2013pinocchio}.
 \section{Binary}
 
 To assert $b \in \{ 0, 1 \}$, we enforce
-\begin{equation}
+\begin{equation} \label{eq:boolean}
   (b) (b - 1) = (0)
 \end{equation}
 
 TODO: Discuss splits and joins
 
 
-\section{Comparisons}
+\section{Selection} \label{sec:selection}
 
-TODO: Describe basic comparison algorithm
+Suppose we have a boolean value $s$, and we wish to compute
+\begin{equation}
+  z \coloneqq
+  \begin{cases}
+    x & \text{if $s = 0$} \\
+    y & \text{if $s = 1$}
+  \end{cases}
+\end{equation}
+We can compute this as
+\begin{equation} \label{eq:selection}
+  z \coloneqq x + s(y - x)
+\end{equation}
+This requires two constraints: one ``is boolean'' asertion (\autoref{eq:boolean}), assuming $s$ was not already known to be boolean, and one for the multiplication.
 
-TODO: Describe Ahmed's optimization
 
-A couple other optimizations are possible in particular circumstances:
-\begin{enumerate}
-  \item To assert (not evaluate) $x < y$, we can split $x$ non-canonically and split $y$ canonically. The prover is forced to use $x$'s canonical representation anyway, otherwise $x_\mathrm{bin} \ge |F| > y_\mathrm{bin}$, making the assertion unsatisfiable.
-  \item To assert $x < c$ for some constant $c \ll |F|$, we can split $x$ into just $\ceil{\log_2(c)}$ bits.
-\end{enumerate}
+\section{2x2 switch}
+
+Suppose we wish to implement a switch with the following structure:
+\begin{center}
+\begin{tikzpicture}[node distance=1.0cm,auto,>=latex']
+  \node [draw, minimum size=3em] (s) {$s$};
+  \node (a) [left=of s.155] {a};
+  \node (b) [left=of s.205] {b};
+  \node (c) [right=of s.25] {c};
+  \node (d) [right=of s.335] {d};
+  \draw[->] (a) -- (s.155);
+  \draw[->] (b) -- (s.205);
+  \draw[->] (s.25) -- (c);
+  \draw[->] (s.335) -- (d);
+\end{tikzpicture}
+\end{center}
+In particular, if $s = 0$ then the outputs should be identical the inputs: $(c, d) = (a, b)$. If $s = 1$ then the inputs should be swapped: $(c, d) = (b, a)$.
+
+This requires two constraints: one ``is boolean'' assertion (\autoref{eq:boolean}), and another for selecting the value of $c$ (\autoref{eq:selection}). Once we have $c$, we can compute $d$ ``for free'' as
+\begin{equation}
+  d \coloneqq a + b - c
+\end{equation}
 
 
 \section{Permutations}
 
-Say we want to verify that two sequences, $(x_1, \dots, x_n)$ and $(y_1, \dots, y_n)$, are permutations of one another.
+Say we want to verify that two sequences, $(x_1, \dots, x_n)$ and $(y_1, \dots, y_n)$, are permutations of one another. This can be done efficiently using routing networks, which used a fixed (for a fixed $n$) network of 2x2 switches.
+
+
+AS-Waksman networks \cite{beauquier2002arbitrary} are a particularly useful construction, since they support arbitrary permutation sizes. They use about $n \log_2(n) - n$ switches, which is close to the theoretical lower bound of $\log_2(n!)$.
 
 
 \section{Sorting}
@@ -110,6 +145,19 @@ TODO: Discuss permutation networks + comparisons to verify order
 TODO: Discuss naive random access via index comparisons
 
 TODO: Discuss binary tree method
+
+
+\section{Comparisons}
+
+TODO: Describe basic comparison algorithm
+
+TODO: Describe Ahmed's optimization
+
+A couple other optimizations are possible in particular circumstances:
+\begin{enumerate}
+  \item To assert (not evaluate) $x < y$, we can split $x$ non-canonically and split $y$ canonically. The prover is forced to use $x$'s canonical representation anyway, otherwise $x_\mathrm{bin} \ge |F| > y_\mathrm{bin}$, making the assertion unsatisfiable.
+  \item To assert $x < c$ for some constant $c \ll |F|$, we can split $x$ into just $\ceil{\log_2 c}$ bits.
+\end{enumerate}
 
 
 \section{Embedded curve operations}
