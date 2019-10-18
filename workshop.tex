@@ -139,7 +139,7 @@ This requires two constraints: one ``is boolean'' assertion (\autoref{eq:boolean
 \end{equation}
 
 
-\section{Permutations}
+\section{Permutations} \label{sec:permutations}
 
 Say we want to verify that two sequences, $(x_1, \dots, x_n)$ and $(y_1, \dots, y_n)$, are permutations of one another. This can be done efficiently using routing networks, which used a fixed (for a fixed $n$) network of 2x2 switches.
 
@@ -148,9 +148,9 @@ AS-Waksman networks \cite{beauquier2002arbitrary} are a particularly useful cons
 
 \section{Sorting}
 
-Like permutation networks, sorting networks use a fixed network of gates. In particular, a sorting network is comprised of several 2x2 comparator gates, each of which takes two inputs and sorts them. It is theoretically possible to construct a sorting network for $n$ elements using $\mathcal{O}(n \log n)$ gates \cite{ajtai19830}, but practical constructions use $\mathcal{O}(n \log^2 n)$ gates.
+Like permutation networks, sorting networks use a fixed network of gates. In particular, a sorting network is comprised of several 2x2 comparator gates, each of which takes two inputs and sorts them. It is theoretically possible to construct a sorting network for $n$ elements using $\mathcal{O}(n \log n)$ gates \cite{ajtai19830}, but practical constructions use $\mathcal{O}(n \log^2 n)$ gates. Since each comparison adds $\mathcal{O}(\log |F|)$ constraints, this approach is fairly expensive.
 
-TODO: Discuss permutation networks + comparisons to verify order
+A better solution is to leverage non-determinism: instead of creating an R1CS circuit to sort a sequence, we have the prover supply the ordered sequence. Using a permutation network (\autoref{sec:permutations}), we can efficiently verify that the two sequences are permutations of one another. Then for each contiguous pair of elements in the ordered sequence, $x_i$ and $x_{i + 1}$, we assert $x_i \le x_{i + 1}$.
 
 
 \section{Comparisons} \label{sec:comparisons}
