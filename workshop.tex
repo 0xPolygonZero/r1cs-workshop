@@ -1,5 +1,6 @@
 \documentclass{article}
 
+\usepackage{amsfonts}
 \usepackage{amsmath}
 \usepackage{hyperref}
 \usepackage{mathtools}
@@ -54,21 +55,21 @@ On the other hand, if we want to \textit{evaluate}
 \begin{equation} \label{eq:nonzero}
   y \coloneqq
   \begin{cases}
-    0 & \text{if $x = 0$} \\
-    1 & \text{otherwise}
+    0 & \text{if $x = 0$,} \\
+    1 & \text{otherwise,}
   \end{cases}
 \end{equation}
 we can do so by introducing another variable, $m$, and enforcing
 \begin{alignat}{2}
-  (x)     & (m) &&= (y) \\
-  (1 - y) & (x) &&= (0)
+  (x)     & (m) &&= (y), \\
+  (1 - y) & (x) &&= (0).
 \end{alignat}
 Outside of the circuit, the prover generates $y$ as in \autoref{eq:nonzero}, and generates $m$ as
 \begin{equation}
   m \coloneqq
   \begin{cases}
-    1 & \text{if $x = 0$} \\
-    y / x & \text{otherwise}
+    1 & \text{if $x = 0$,} \\
+    y / x & \text{otherwise.}
   \end{cases}
 \end{equation}
 This method is from \cite{parno2013pinocchio}.
@@ -78,10 +79,16 @@ This method is from \cite{parno2013pinocchio}.
 
 To assert $b \in \{ 0, 1 \}$, we enforce
 \begin{equation} \label{eq:boolean}
-  (b) (b - 1) = (0)
+  (b) (b - 1) = (0).
 \end{equation}
 
-TODO: Discuss splits and joins
+To convert a field element $x$ to its binary encoding, $(b_1, \dots, b_n)$, we have the prover generate the binary encoding out-of-band. We then verify it by applying \autoref{eq:boolean} to each $b_i$, and enforcing
+\begin{equation} \label{eq:binary}
+  (x) (1) = \left( \sum_{i=0}^{n-1} 2^i b_i \right),
+\end{equation}
+assuming a little-ending ordering of the bits.
+
+Note that \autoref{eq:binary} permits two encodings of certain field elements. In $\mathbb{F}_{13}$ for example, the element $1$ can be represented as either $0001$ or $1110$. If a canonical encoding is required, we can prevent ``overflowing'' encodings by asserting that $(b_1, \dots, b_n) < |F|$. Such binary comparisons are covered in \autoref{sec:comparisons}.
 
 
 \section{Selection} \label{sec:selection}
@@ -90,15 +97,22 @@ Suppose we have a boolean value $s$, and we wish to compute
 \begin{equation}
   z \coloneqq
   \begin{cases}
-    x & \text{if $s = 0$} \\
-    y & \text{if $s = 1$}
+    x & \text{if $s = 0$,} \\
+    y & \text{if $s = 1$.}
   \end{cases}
 \end{equation}
 We can compute this as
 \begin{equation} \label{eq:selection}
-  z \coloneqq x + s(y - x)
+  z \coloneqq x + s(y - x).
 \end{equation}
-This requires two constraints: one ``is boolean'' asertion (\autoref{eq:boolean}), assuming $s$ was not already known to be boolean, and one for the multiplication.
+This requires two constraints: one ``is boolean'' asertion (\autoref{eq:boolean}), assuming $s$ was not already known to be boolean, and another for the multiplication.
+
+
+\section{Random access}
+
+TODO: Discuss naive random access via index comparisons
+
+TODO: Discuss binary tree method
 
 
 \section{2x2 switch}
@@ -121,7 +135,7 @@ In particular, if $s = 0$ then the outputs should be identical the inputs: $(c, 
 
 This requires two constraints: one ``is boolean'' assertion (\autoref{eq:boolean}), and another for selecting the value of $c$ (\autoref{eq:selection}). Once we have $c$, we can compute $d$ ``for free'' as
 \begin{equation}
-  d \coloneqq a + b - c
+  d \coloneqq a + b - c.
 \end{equation}
 
 
@@ -129,25 +143,17 @@ This requires two constraints: one ``is boolean'' assertion (\autoref{eq:boolean
 
 Say we want to verify that two sequences, $(x_1, \dots, x_n)$ and $(y_1, \dots, y_n)$, are permutations of one another. This can be done efficiently using routing networks, which used a fixed (for a fixed $n$) network of 2x2 switches.
 
-
 AS-Waksman networks \cite{beauquier2002arbitrary} are a particularly useful construction, since they support arbitrary permutation sizes. They use about $n \log_2(n) - n$ switches, which is close to the theoretical lower bound of $\log_2(n!)$.
 
 
 \section{Sorting}
 
-TODO: Discuss sorting networks
+Like permutation networks, sorting networks use a fixed network of gates. In particular, a sorting network is comprised of several 2x2 comparator gates, each of which takes two inputs and sorts them. It is theoretically possible to construct a sorting network for $n$ elements using $\mathcal{O}(n \log n)$ gates \cite{ajtai19830}, but practical constructions use $\mathcal{O}(n \log^2 n)$ gates.
 
 TODO: Discuss permutation networks + comparisons to verify order
 
 
-\section{Random access}
-
-TODO: Discuss naive random access via index comparisons
-
-TODO: Discuss binary tree method
-
-
-\section{Comparisons}
+\section{Comparisons} \label{sec:comparisons}
 
 TODO: Describe basic comparison algorithm
 
