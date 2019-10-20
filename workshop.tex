@@ -114,6 +114,8 @@ TODO: Discuss naive random access via index comparisons
 
 TODO: Discuss binary tree method
 
+TODO: Discuss single-constraint method for $n = 4$.
+
 
 \section{2x2 switch}
 
@@ -133,10 +135,11 @@ Suppose we wish to implement a switch with the following structure:
 \end{center}
 In particular, if $s = 0$ then the outputs should be identical the inputs: $(c, d) = (a, b)$. If $s = 1$ then the inputs should be swapped: $(c, d) = (b, a)$.
 
-This requires two constraints: one ``is boolean'' assertion (\autoref{eq:boolean}), and another for selecting the value of $c$ (\autoref{eq:selection}). Once we have $c$, we can compute $d$ ``for free'' as
+This requires two constraints: one ``is boolean'' assertion (\autoref{eq:boolean}), and another for selecting the value of $c$ (\autoref{eq:selection}). Once we have $c$, we can compute $d$ as
 \begin{equation}
-  d \coloneqq a + b - c.
+  d \coloneqq a + b - c
 \end{equation}
+which does not require any additional constraints.
 
 
 \section{Permutations} \label{sec:permutations}
@@ -155,9 +158,9 @@ A better solution is to leverage non-determinism: instead of creating an R1CS ci
 
 \section{Comparisons} \label{sec:comparisons}
 
-TODO: Describe basic comparison algorithm
+TODO: Describe the basic comparison algorithm.
 
-TODO: Describe Ahmed's optimization
+TODO: Describe Ahmed's optimization.
 
 A couple other optimizations are possible in particular circumstances:
 \begin{enumerate}
@@ -168,7 +171,35 @@ A couple other optimizations are possible in particular circumstances:
 
 \section{Embedded curve operations}
 
-TODO: Discuss basic embedded curve operations
+Embedded curves have several uses in SNARKs. A few examples are Schnorr signatures, Pedersen hashes, and recursive SNARK verifiers.
+Here we will focus on twisted Edwards curves such as Jubjub.
+
+
+\subsection{Addition}
+
+Recall the addition law for twisted Edwards curves,
+
+\begin{equation}
+  (x_1, y_1) = \left( \frac{x_1 y_1 + y_1 x_2}{1 + d x_1 x_2 y_1 y_2}, \frac{y_1 y_2 - a x_1 x_2}{1 - d x_1 x_2 y_1 y_2} \right).
+\end{equation}
+
+Applying the law directly takes 7 constraints: 4 for the products in the numerators, one for the denominator product, and one\footnote{In general, computing a quotient $q \coloneqq x / y$ takes two constraints: $(y) (y_\mathrm{inv}) = (1)$ and $(x) (y_\mathrm{inv}) = (q)$. In this case, however, we can multiply both sides by the denominator since we know it will never be zero. This yields a single constraint: $(q) (y) = (x)$.} for each of the two quotients.
+
+TODO: Discuss constant addition, which takes just 3 constraits.
+
+
+\subsection{Doubling}
+
+TODO: Explain the cost of doubling.
+
+
+\subsection{Multiplication}
+
+TODO: Discuss multiplication by doubling, along with its variants, like windowed multiplication.
+
+%To compute $s p$ for some scalar $s$ and point $p$, TODO.
+
+%similar to exponentiation by squaring, except that we use additive group notation.
 
 
 \bibliography{bibliography}{}
