@@ -178,26 +178,25 @@ Here we will focus on twisted Edwards curves such as Jubjub.
 \subsection{Addition}
 
 Recall the addition law for twisted Edwards curves,
-
 \begin{equation}
-  (x_1, y_1) = \left( \frac{x_1 y_1 + y_1 x_2}{1 + d x_1 x_2 y_1 y_2}, \frac{y_1 y_2 - a x_1 x_2}{1 - d x_1 x_2 y_1 y_2} \right).
+  (x_1, y_1) + (x_2, y_2) = \left( \frac{x_1 y_1 + y_1 x_2}{1 + d x_1 x_2 y_1 y_2}, \frac{y_1 y_2 - a x_1 x_2}{1 - d x_1 x_2 y_1 y_2} \right).
 \end{equation}
-
 Applying the law directly takes 7 constraints: 4 for the products in the numerators, one for the denominator product, and one\footnote{In general, computing a quotient $q \coloneqq x / y$ takes two constraints: $(y) (y_\mathrm{inv}) = (1)$ and $(x) (y_\mathrm{inv}) = (q)$. In this case, however, we can multiply both sides by the denominator since we know it will never be zero. This yields a single constraint: $(q) (y) = (x)$.} for each of the two quotients.
 
-TODO: Discuss constant addition, which takes just 3 constraits.
+However, the operation becomes much cheaper when of the points is constant. Without loss of generality, suppose $(x_1, y_1)$ is constant while $(x_2, y_2)$ is variable. Then the numerators become ``free'' linear combinations, while the denominators require a single multiplication. The quotients add 2 constraints as before, resulting in 3 constraints total.
 
-
-\subsection{Doubling}
-
-TODO: Explain the cost of doubling.
+Finally, when doubling a point, the addition law simplifies to
+\begin{equation}
+  [2] (x, y) = \left( \frac{2 x y}{a x^2 + y^2}, \frac{y^2 - a x^2}{2 - a x^2 - y^2} \right)
+\end{equation}
+which requires 5 constraints.
 
 
 \subsection{Multiplication}
 
 TODO: Discuss multiplication by doubling, along with its variants, like windowed multiplication.
 
-%To compute $s p$ for some scalar $s$ and point $p$, TODO.
+%To compute $[s] p$ for some scalar $s$ and point $p$, TODO.
 
 %similar to exponentiation by squaring, except that we use additive group notation.
 
