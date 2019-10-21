@@ -43,7 +43,7 @@ Deterministically computing $1 / x$ in an R1CS circuit would be expensive. Inste
 \end{equation}
 
 
-\section{Zero testing}
+\section{Zero testing} \label{sec:zerotest}
 
 To assert $x = 0$, we simply enforce
 \begin{equation}
@@ -73,6 +73,8 @@ Outside of the circuit, the prover generates $y$ as in \autoref{eq:nonzero}, and
   \end{cases}
 \end{equation}
 This method is from \cite{parno2013pinocchio}.
+
+We can also use this technique to test for equality, since $x = y$ if and only if $x - y = 0$.
 
 
 \section{Binary}
@@ -110,11 +112,13 @@ This requires two constraints: one ``is boolean'' asertion (\autoref{eq:boolean}
 
 \section{Random access}
 
-TODO: Discuss naive random access via index comparisons
+Suppose we have a sequence $S = (x_0, \dots, x_n)$, and we wish to access the $i$th element. One approach would be to multiply each element by an equality test (\autoref{sec:zerotest}) comparing that element's index to $i$, then sum up those products. In particualar,
+\begin{equation}
+  S_i = \sum_{j=0}^{n-1} (i = j) x_j
+\end{equation}
+This requires $3n$ constraints: $2n$ for the zero tests and $n$ for the products.
 
 TODO: Discuss binary tree method
-
-TODO: Discuss single-constraint method for $n = 4$.
 
 
 \section{2x2 switch}
