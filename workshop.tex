@@ -8,6 +8,7 @@
 
 \usetikzlibrary{arrows}
 \usetikzlibrary{positioning}
+\usetikzlibrary{trees}
 
 \title{R1CS Programming \\ \large ZK0x04 Workshop Notes}
 \author{Daniel Lubarov \and Brendan Farmer}
@@ -84,7 +85,7 @@ To assert $b \in \{ 0, 1 \}$, we enforce
   (b) (b - 1) = (0).
 \end{equation}
 
-To convert a field element $x$ to its binary encoding, $(b_1, \dots, b_n)$, we have the prover generate the binary encoding out-of-band. We then verify it by applying \autoref{eq:boolean} to each $b_i$, and enforcing
+To ``split'' a field element $x$ into its binary encoding, $(b_1, \dots, b_n)$, we have the prover generate the binary encoding out-of-band. We then verify it by applying \autoref{eq:boolean} to each $b_i$, and enforcing
 \begin{equation} \label{eq:binary}
   (x) (1) = \left( \sum_{i=0}^{n-1} 2^i b_i \right),
 \end{equation}
@@ -118,7 +119,32 @@ Suppose we have a sequence $S = (x_0, \dots, x_n)$, and we wish to access the $i
 \end{equation}
 This requires $3n$ constraints: $2n$ for the zero tests and $n$ for the products.
 
-TODO: Discuss binary tree method
+A better approach is to split $i$ into its binary encoding, $(i_0, \dots, i_k)$, where $k = \ceil{\log_2 n}$. Then we can view $(i_0, \dots, i_k)$ as a path through a binary tree with $(x_0, \dots, x_n)$ as its leaves. For example, if $n = 4$, we could imagine the following binary tree:
+\begin{center}
+\begin{tikzpicture}[level distance=1.5cm,
+  level 1/.style={sibling distance=3cm},
+  level 2/.style={sibling distance=1.5cm}]
+  \node[circle,draw] {$z_0$}
+    child {node[circle,draw] {$y_0$}
+      child {node[circle,draw] {$x_0$}}
+      child {node[circle,draw] {$x_1$}}
+    }
+    child {node[circle,draw] {$y_1$}
+      child {node[circle,draw] {$x_2$}}
+      child {node[circle,draw] {$x_3$}}
+    };
+\end{tikzpicture}
+\end{center}
+Then for each non-leaf node, we would select one of its two children using the method from \autoref{sec:selection}. In the example, we have
+\begin{alignat}{2}
+  y_0 &\coloneqq x_0 + b_0 (x_1 - x_0), \\
+  y_1 &\coloneqq x_2 + b_0 (x_3 - x_2), \\
+  z_0 &\coloneqq y_0 + b_1 (y_1 - y_0).
+\end{alignat}
+
+If $n$ is a power of 2, this method takes $\log_2 n + 1$ constraints for splitting $i$ and $n - 1$ constraints for the selection operations, for a total cost of $n + \log_2 n$. If $(x_0, \dots, x_n)$ is comprised of constant values, then selecting between two leaf nodes becomes a free linear combination, saving us $n / 2$ constraints.
+
+If $n$ is not a power of 2, this method can still be used, but we need to think about how to handle out-of-bounds indices. We could assert $i \le n$ (\autoref{sec:comparisons}), but this may not be necessary depending on the context.
 
 
 \section{2x2 switch}
@@ -162,7 +188,11 @@ A better solution is to leverage non-determinism: instead of creating an R1CS ci
 
 \section{Comparisons} \label{sec:comparisons}
 
-TODO: Describe the basic comparison algorithm.
+Say we want to evaluate $x < y$. For now, assume that both values fit in $n$ bits, where $2^{n + 1} < |F|$. We compute
+\begin{equation}
+  z = 2^n + x - y.
+\end{equation}
+Notice that $2^n$ has a single 1 bit with index $n$, which will be cleared if and only if $x < y$. Thus we split $z$ into $n + 1$ bits, and the negation of the $n$th bit is our result.
 
 TODO: Describe Ahmed's optimization.
 
@@ -198,10 +228,10 @@ which requires 5 constraints.
 
 \subsection{Multiplication}
 
-TODO: Discuss multiplication by doubling, along with its variants, like windowed multiplication.
+TODO: Discuss multiplication by doubling, along with its variants like windowed multiplication.
 
 %To compute $[s] p$ for some scalar $s$ and point $p$, TODO.
-
+%
 %similar to exponentiation by squaring, except that we use additive group notation.
 
 
