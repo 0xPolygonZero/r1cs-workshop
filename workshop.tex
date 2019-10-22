@@ -153,6 +153,40 @@ If $n$ is a power of 2, this method takes $\log_2 n + 1$ constraints for splitti
 If $n$ is not a power of 2, this method can still be used, but we need to think about how to handle out-of-bounds indices. We could assert $i \le n$ (\autoref{sec:comparisons}), but this may not be necessary depending on the context.
 
 
+\section{Embedded curve operations}
+
+Embedded curves have several uses in SNARKs. A few examples are Schnorr signatures, Pedersen hashes, and recursive SNARK verifiers.
+Here we will focus on twisted Edwards curves such as Jubjub.
+
+
+\subsection{Addition}
+
+Recall the addition law for twisted Edwards curves,
+\begin{equation}
+  (x_1, y_1) + (x_2, y_2) = \left( \frac{x_1 y_1 + y_1 x_2}{1 + d x_1 x_2 y_1 y_2}, \frac{y_1 y_2 - a x_1 x_2}{1 - d x_1 x_2 y_1 y_2} \right).
+\end{equation}
+Applying the law directly takes 7 constraints: 4 for the products in the numerators, one for the product in the denominator, and one\footnote{In general, computing a quotient $q \coloneqq x / y$ takes two constraints: $(y) (y_\mathrm{inv}) = (1)$ and $(x) (y_\mathrm{inv}) = (q)$. In this case, however, we can multiply both sides by the denominator since we know it will never be zero. This yields a single constraint: $(q) (y) = (x)$.} for each of the two quotients.
+
+However, the operation becomes much cheaper when of the points is constant. Without loss of generality, suppose $(x_1, y_1)$ is constant while $(x_2, y_2)$ is variable. Then the numerators become ``free'' linear combinations, while the denominators require a single multiplication. The quotients add 2 constraints as before, resulting in 3 constraints total.
+
+Finally, when doubling a point, the addition law simplifies to
+\begin{equation}
+  [2] (x, y) = \left( \frac{2 x y}{a x^2 + y^2}, \frac{y^2 - a x^2}{2 - a x^2 - y^2} \right)
+\end{equation}
+which requires 5 constraints.
+
+
+\subsection{Multiplication}
+
+Consider the problem of compusing $[s] p$, where $p$ is a constant point and $s$ is a variable scalar.
+
+TODO: Discuss multiplication by doubling, along with its variants like windowed multiplication.
+
+%To compute $[s] p$ for some scalar $s$ and point $p$, TODO.
+%
+%similar to exponentiation by squaring, except that we use additive group notation.
+
+
 \section{2x2 switch}
 
 Suppose we wish to implement a switch with the following structure:
@@ -200,7 +234,7 @@ Suppose we want to evaluate $x < y$. For now, assume that both values fit in $n$
 \end{equation}
 Notice that $2^n$ has a single 1 bit with index $n$, which will be cleared if and only if $x < y$. Thus we split $z$ into $n + 1$ bits, and the negation of the $n$th bit is our result.
 
-If $x$ and $y$ are unbounded, then the technique described above does not help. A neat solution was described by Ahmed Kosba. First, we split $x$ and $y$ into their binary forms, $(x_0, \dots, x_n)$ and $(y_0, \dots, y_n)$. Next we divide each binary sequence into $c$-bit chunks, and join each chunk of bits into a field element (\autoref{eq:join}).
+If $x$ and $y$ are unbounded, then the aforementioned technique does not apply. A neat solution was described by Ahmed Kosba. First, we split $x$ and $y$ into their binary forms, $(x_0, \dots, x_n)$ and $(y_0, \dots, y_n)$. Next we divide each binary sequence into $c$-bit chunks, and join each chunk of bits into a field element (\autoref{eq:join}).
 
 The prover non-deterministically identifies the most significant chunk index at which $x$ and $y$ differ, if any. We add constraints to verify that the identified chunks do indeed differ, and that any more significant chunks are equal. Finally, we compare the two identified chunks using \autoref{eq:bounded-comparison}.
 
@@ -209,38 +243,6 @@ If we choose $c, l \in \mathcal{O}(\sqrt{n})$, this approach requires $\mathcal{
   \item To assert (not evaluate) $x < y$, we can split $x$ non-canonically and split $y$ canonically. The prover is forced to use $x$'s canonical encoding anyway, otherwise $x_\mathrm{bin} \ge |F| > y_\mathrm{bin}$, making the assertion unsatisfiable.
   \item To assert $x < c$ for some constant $c \ll |F|$, we can split $x$ into just $\ceil{\log_2 c}$ bits.
 \end{enumerate}
-
-
-\section{Embedded curve operations}
-
-Embedded curves have several uses in SNARKs. A few examples are Schnorr signatures, Pedersen hashes, and recursive SNARK verifiers.
-Here we will focus on twisted Edwards curves such as Jubjub.
-
-
-\subsection{Addition}
-
-Recall the addition law for twisted Edwards curves,
-\begin{equation}
-  (x_1, y_1) + (x_2, y_2) = \left( \frac{x_1 y_1 + y_1 x_2}{1 + d x_1 x_2 y_1 y_2}, \frac{y_1 y_2 - a x_1 x_2}{1 - d x_1 x_2 y_1 y_2} \right).
-\end{equation}
-Applying the law directly takes 7 constraints: 4 for the products in the numerators, one for the denominator product, and one\footnote{In general, computing a quotient $q \coloneqq x / y$ takes two constraints: $(y) (y_\mathrm{inv}) = (1)$ and $(x) (y_\mathrm{inv}) = (q)$. In this case, however, we can multiply both sides by the denominator since we know it will never be zero. This yields a single constraint: $(q) (y) = (x)$.} for each of the two quotients.
-
-However, the operation becomes much cheaper when of the points is constant. Without loss of generality, suppose $(x_1, y_1)$ is constant while $(x_2, y_2)$ is variable. Then the numerators become ``free'' linear combinations, while the denominators require a single multiplication. The quotients add 2 constraints as before, resulting in 3 constraints total.
-
-Finally, when doubling a point, the addition law simplifies to
-\begin{equation}
-  [2] (x, y) = \left( \frac{2 x y}{a x^2 + y^2}, \frac{y^2 - a x^2}{2 - a x^2 - y^2} \right)
-\end{equation}
-which requires 5 constraints.
-
-
-\subsection{Multiplication}
-
-TODO: Discuss multiplication by doubling, along with its variants like windowed multiplication.
-
-%To compute $[s] p$ for some scalar $s$ and point $p$, TODO.
-%
-%similar to exponentiation by squaring, except that we use additive group notation.
 
 
 \bibliography{bibliography}{}
