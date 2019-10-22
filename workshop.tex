@@ -119,38 +119,59 @@ This requires two constraints: one ``is boolean'' asertion (\autoref{eq:boolean}
 
 \section{Random access}
 
-Suppose we have a sequence $S = (x_0, \dots, x_n)$, and we wish to access the $i$th element. One approach would be to multiply each element by an equality test (\autoref{sec:zerotest}) comparing that element's index to $i$, then sum up those products. In particualar,
-\begin{equation}
-  S_i = \sum_{j=0}^{n-1} (i = j) x_j
-\end{equation}
-This requires $3n$ constraints: $2n$ for the zero tests and $n$ for the products.
+Suppose we have a sequence of field elements, $S = (x_0, \dots, x_n)$, and we wish to access its $i$th element. For simplicity, we will assume $n = 2^k$, although our techniques can be generalized to arbitrary sequence lengths.
 
-A better approach is to split $i$ into its binary encoding, $(i_0, \dots, i_k)$, where $k = \ceil{\log_2 n}$. Then we can view $(i_0, \dots, i_k)$ as a path through a binary tree with $(x_0, \dots, x_n)$ as its leaves. For example, if $n = 4$, we could imagine the following binary tree:
+We start by splitting $i$ into its binary encoding, $(i_0, \dots, i_k)$. One may think of $(i_0, \dots, i_k)$ as a path through a binary tree, where $i_j$ indicates the direction of descent at height $j$. For each leaf $j$, we construct a polynomial $l_j: (i_0, \dots, i_k) \to \{0, 1\}$ which evaluates evaluates whether $j$ is the selected index.
+
+If $k = 2$ for example, we would imagine the following binary tree:
+\tikzset{MyNode/.style={circle,draw,minimum size=0.65cm,inner sep=1}}
 \begin{center}
-\begin{tikzpicture}[level distance=1.5cm,
-  level 1/.style={sibling distance=3cm},
-  level 2/.style={sibling distance=1.5cm}]
-  \node[circle,draw] {$z_0$}
-    child {node[circle,draw] {$y_0$}
-      child {node[circle,draw] {$x_0$}}
-      child {node[circle,draw] {$x_1$}}
+\begin{tikzpicture}[level distance=1.8cm,
+  level 1/.style={sibling distance=3.6cm},
+  level 2/.style={sibling distance=1.8cm}]
+  \node[MyNode] {}
+    child {
+      node[MyNode] {}
+      child {
+        node[MyNode] {$l_0$}
+        edge from parent node[left] {$i_0 = 0$}
+      }
+      child {
+        node[MyNode] {$l_1$}
+        edge from parent node[right] {$i_0 = 1$}
+      }
+      edge from parent node[left] {$i_1 = 0$}
     }
-    child {node[circle,draw] {$y_1$}
-      child {node[circle,draw] {$x_2$}}
-      child {node[circle,draw] {$x_3$}}
+    child {
+      node[MyNode] {}
+      child {
+        node[MyNode] {$l_2$}
+        edge from parent node[left] {$i_0 = 0$}
+      }
+      child {
+        node[MyNode] {$l_3$}
+        edge from parent node[right] {$i_0 = 1$}
+      }
+      edge from parent node[right] {$i_1 = 1$}
     };
 \end{tikzpicture}
 \end{center}
-Then for each non-leaf node, we would select one of its two children using the method from \autoref{sec:selection}. In the example, we have
-\begin{alignat}{2}
-  y_0 &\coloneqq x_0 + b_0 (x_1 - x_0), \\
-  y_1 &\coloneqq x_2 + b_0 (x_3 - x_2), \\
-  z_0 &\coloneqq y_0 + b_1 (y_1 - y_0).
-\end{alignat}
+and construct the leaf polynomials as
+\begin{alignat*}{2}
+  l_0 &\coloneqq (1 - i_1)(1 - i_0) &&= 1 - i_0 - i_1 + i_0 i_1, \\
+  l_1 &\coloneqq (1 - i_1)(i_0) &&= i_0 - i_0 i_1, \\
+  l_2 &\coloneqq (i_1)(1 - i_0) &&= i_1 - i_0 i_1, \\
+  l_3 &\coloneqq (i_1)(i_0) &&= i_0 i_1.
+\end{alignat*}
 
-If $n$ is a power of 2, this method takes $\log_2 n + 1$ constraints for splitting $i$ and $n - 1$ constraints for the selection operations, for a total cost of $n + \log_2 n$. If $(x_0, \dots, x_n)$ is comprised of constant values, then selecting between two leaf nodes becomes a free linear combination, saving us $n / 2$ constraints.
+Once we have these leaf polynomials, the result of the lookup is
+\begin{equation}
+  \sum_{j=0}^{n-1} x_j l_j
+\end{equation}
 
-If $n$ is not a power of 2, this method can still be used, but we need to think about how to handle out-of-bounds indices. We could assert $i \le n$ (\autoref{sec:comparisons}), but this may not be necessary depending on the context.
+TODO: Describe trick to get an extra layer for cheap.
+
+TODO: Discuss lookups for $r$-tuples of field elements.
 
 
 \section{Embedded curve operations}
