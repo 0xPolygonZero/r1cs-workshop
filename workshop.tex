@@ -29,6 +29,8 @@
 
 % Tweak autoref names to use capitals.
 \renewcommand{\sectionautorefname}{Section}
+\renewcommand{\subsectionautorefname}{Section}
+\renewcommand{\subsubsectionautorefname}{Section}
 
 \begin{document}
 
@@ -227,7 +229,7 @@ Then to access $x_i$, we take the sum of each leaf multiplied by its selection c
 Computing these conditions naively would require $n - 1$ constraints, since we would perform one multiplication per non-root node. We can achieve much greater efficiency, however, by distributing the products and reusing intermediate products. In the example, we would compute just four products: $b_0 b_1$, $b_0 b_2$, $b_1 b_2$, and $b_0 (b_1 b_2)$. In general, the cost of this approach is $2^k - k - 1$ constraints.
 
 
-\subsection{Hybrid method}
+\subsection{Hybrid method} \label{sec:random-access-hybrid}
 
 Unfortunately, both of the aforementioned methods cost $\mathcal{O}(n)$ constraints. It turns out that we can do better by combining them. Pick some $l, m$ such that $l + m = k$. We divide our conceptual tree into subtrees of size $2^l$, and apply the sum-of-conditions method to each subtree. This costs $2^l - l - 1$ constraints independent of the number of subtrees, since each subtree uses the exact same set of conditions.
 
@@ -285,9 +287,9 @@ We can generalize \autoref{eq:mult-by-doubling} by decomposing $s$ into its base
 \begin{equation}
   [s] p = \sum_{i=0}^{n/w-1} [s_i] [(2^w)^i] p.
 \end{equation}
-As before, $[(2^w)^i] p$ can be precomputed for each $i$. We can go a step further by precomputing $[s_i] [(2^w)^i] p$ for each of $2^w$ possible values of $s_i$, then looking up the relevant value using the a method from \autoref{sec:random-access}.
+As before, $[(2^w)^i] p$ can be precomputed for each $i$. We can go a step further by precomputing $[s_i] [(2^w)^i] p$ for each of $2^w$ possible values of $s_i$, then looking up the relevant value using the method described in \autoref{sec:random-access-hybrid}.
 
-TODO: Discuss costs of this approach.
+In practice, a window size of 3 seems optimal. If we configure our random access gadget with $l = 2$ and $m = 1$, the lookup costs 3 constraints per 3-bit window.\footnote{This is one more than the formula in \autoref{sec:random-access-hybrid} would imply, since the selection operation needs to be done for both coordinates of the curve point.} The addition adds another 7 constraints per window, for a total cost of 10 constraints per window, or $3.33$ constraints per bit.
 
 
 \section{2x2 switch}
