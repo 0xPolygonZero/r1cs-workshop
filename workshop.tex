@@ -1,5 +1,6 @@
 \documentclass{article}
 
+\usepackage{algorithm2e}
 \usepackage{amsfonts}
 \usepackage{amsmath}
 \usepackage{forest}
@@ -129,7 +130,7 @@ We start by splitting $i$ into its binary encoding, $(i_0, \dots, i_k)$. One may
 \begin{center}
 \begin{forest}
   for tree={circle,draw,inner sep=0,minimum size=0.6cm},
-  selected/.style={edge=red,draw=red}
+  selected/.style={edge={red,thick},draw={red,thick}}
   [,selected
     [,
       [,
@@ -154,7 +155,7 @@ We start by splitting $i$ into its binary encoding, $(i_0, \dots, i_k)$. One may
   ]
 \end{forest}
 \end{center}
-Now, we will describe a few methods of random access which leverage this mental model.
+Now, we will describe a few methods of random access which build upon this mental model.
 
 
 \subsection{Repeated selection method}
@@ -187,7 +188,7 @@ First, we could perform a selection operation (\autoref{sec:selection}) for each
   ]
 \end{forest}
 \end{center}
-after which the root node $r$ will hold $x_i$.
+after which the root node $r$ will hold $x_i$. This involves $n - 1$ (or $2^k - 1$) selection operations, since a perfect tree with $n$ leaves contains $n - 1$ non-leaf nodes. However, if $(x_0, \dots, x_n)$ are constant then selecting between two leaves becomes a free linear combination, which brings the cost down to $n/2 - 1$ (or $2^{k - 1} - 1$) constraints.
 
 
 \subsection{Sum-of-conditions method}
@@ -257,13 +258,27 @@ which requires 5 constraints.
 
 \subsection{Multiplication}
 
-Consider the problem of compusing $[s] p$, where $p$ is a constant point and $s$ is a variable scalar.
+Consider the problem of computing $[s] p$, where $p$ is a constant point and $s$ is a variable scalar. A simple, reasonably efficient approach is known as multiplication by doubling. We split $s$ into its binary encoding, $(s_0, \dots, s_n)$, then compute
+\begin{equation}
+  [s] p = \sum_{i=0}^{n-1} [s_i] [2^i] p.
+\end{equation}
+Since $p$ is constant, $[2^i] p$ can be precomputed. Thus for each $i$, we perform a conditional addition: if $s_i = 1$, we add $[2^i] p$ to an accumulator. Since adding a constant point is cheaper than adding a variable point, it is best to structure the computation as
 
-TODO: Discuss multiplication by doubling, along with its variants like windowed multiplication.
+\begin{algorithm}[H]
+  \SetKwData{Sum}{sum}
+  \SetKwFunction{Select}{select}
+  $\Sum \leftarrow 0$\;
+  \For{$i \leftarrow 0$ \KwTo $n$}{
+    $q \leftarrow \Sum + [2^i] p$\tcc*{addition with a constant value}
+    $\Sum \leftarrow \Select(s_i, \Sum, q)$\;
+  }
+  \Return \Sum\;
+\end{algorithm}
 
-%To compute $[s] p$ for some scalar $s$ and point $p$, TODO.
-%
-%similar to exponentiation by squaring, except that we use additive group notation.
+
+\subsection{Windowed multiplication}
+
+TODO
 
 
 \section{2x2 switch}
