@@ -118,7 +118,7 @@ We can compute this as
 This requires two constraints: one ``is boolean'' asertion (\autoref{eq:boolean}), assuming $s$ was not already known to be boolean, and another for the multiplication.
 
 
-\section{Random access}
+\section{Random access} \label{sec:random-access}
 
 Suppose we wish to access the $i$th item of some sequence $(x_0, \dots, x_n)$. There are several variations of this problem, but for the sake of brevity, we will assume that
 \begin{enumerate}
@@ -259,11 +259,11 @@ which requires 5 constraints.
 \subsection{Multiplication}
 
 Consider the problem of computing $[s] p$, where $p$ is a constant point and $s$ is a variable scalar. A simple, reasonably efficient approach is known as multiplication by doubling. We split $s$ into its binary encoding, $(s_0, \dots, s_n)$, then compute
-\begin{equation}
+\begin{equation} \label{eq:mult-by-doubling}
   [s] p = \sum_{i=0}^{n-1} [s_i] [2^i] p.
 \end{equation}
 Since $p$ is constant, $[2^i] p$ can be precomputed. Thus for each $i$, we perform a conditional addition: if $s_i = 1$, we add $[2^i] p$ to an accumulator. Since adding a constant point is cheaper than adding a variable point, it is best to structure the computation as
-
+\begin{center}
 \begin{algorithm}[H]
   \SetKwData{Sum}{sum}
   \SetKwFunction{Select}{select}
@@ -274,11 +274,19 @@ Since $p$ is constant, $[2^i] p$ can be precomputed. Thus for each $i$, we perfo
   }
   \Return \Sum\;
 \end{algorithm}
+\end{center}
+Ignoring the cost of splitting, this requires 5 constraints per bit: 3 for the constant addition, and 2 for selecting a 2-tuple.
 
 
 \subsection{Windowed multiplication}
 
-TODO
+We can generalize \autoref{eq:mult-by-doubling} by decomposing $s$ into its base-$2^w$ encoding, rather than base 2 specifically. Let $(s_0, \dots, s_{n/w})$ be the base-$2^w$ decomposition of $s$. Note that $s_i$ can be expressed as a linear combination of bits of $s$, so the cost of decomposition does not change. We can rewrite $[s] p$ as
+\begin{equation}
+  [s] p = \sum_{i=0}^{n/w-1} [s_i] [(2^w)^i] p.
+\end{equation}
+As before, $[(2^w)^i] p$ can be precomputed for each $i$. We can go a step further by precomputing $[s_i] [(2^w)^i] p$ for each of $2^w$ possible values of $s_i$, then looking up the relevant value using the a method from \autoref{sec:random-access}.
+
+TODO: Discuss costs of this approach.
 
 
 \section{2x2 switch}
