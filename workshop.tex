@@ -278,7 +278,7 @@ Since $p$ is constant, $[2^i] p$ can be precomputed. Thus for each $i$, we perfo
 Ignoring the cost of splitting, this requires 5 constraints per bit: 3 for the constant addition, and 2 for selecting a 2-tuple.
 
 
-\subsection{Windowed multiplication}
+\subsubsection{Windowed multiplication}
 
 We can generalize \autoref{eq:mult-by-doubling} by decomposing $s$ into its base-$2^w$ encoding, rather than base 2 specifically. Let $(s_0, \dots, s_{n/w})$ be the base-$2^w$ decomposition of $s$. Note that $s_i$ can be expressed as a linear combination of bits of $s$, so the cost of decomposition does not change. We can rewrite $[s] p$ as
 \begin{equation}
