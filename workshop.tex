@@ -2,13 +2,13 @@
 
 \usepackage{amsfonts}
 \usepackage{amsmath}
+\usepackage{forest}
 \usepackage{hyperref}
 \usepackage{mathtools}
 \usepackage{tikz}
 
 \usetikzlibrary{arrows}
 \usetikzlibrary{positioning}
-\usetikzlibrary{trees}
 
 \title{R1CS Programming \\ \large ZK0x04 Workshop Notes}
 \author{Daniel Lubarov \and Brendan Farmer}
@@ -119,59 +119,117 @@ This requires two constraints: one ``is boolean'' asertion (\autoref{eq:boolean}
 
 \section{Random access}
 
-Suppose we have a sequence of field elements, $S = (x_0, \dots, x_n)$, and we wish to access its $i$th element. For simplicity, we will assume $n = 2^k$, although our techniques can be generalized to arbitrary sequence lengths.
-
-We start by splitting $i$ into its binary encoding, $(i_0, \dots, i_k)$. One may think of $(i_0, \dots, i_k)$ as a path through a binary tree, where $i_j$ indicates the direction of descent at height $j$. For each leaf $j$, we construct a polynomial $l_j: (i_0, \dots, i_k) \to \{0, 1\}$ which evaluates evaluates whether $j$ is the selected index.
-
-If $k = 2$ for example, we would imagine the following binary tree:
-\tikzset{MyNode/.style={circle,draw,minimum size=0.65cm,inner sep=1}}
+Suppose we wish to access the $i$th item of some sequence $(x_0, \dots, x_n)$. There are several variations of this problem, but for the sake of brevity, we will assume that
+\begin{enumerate}
+  \item The sequence length is a power of two: $n = 2^k$.
+  \item The items are individual field elements (rather than, say, elliptic curve points).
+  \item Each item $x_j$ is a constant.
+\end{enumerate}
+We start by splitting $i$ into its binary encoding, $(i_0, \dots, i_k)$. One may think of $(i_0, \dots, i_k)$ as a path through a binary tree, where $i_j$ indicates the direction of descent at height $j$. For example, say $n=8$ (thus $k=3$) and $i = 5 = 101$. This corresponds to the following binary tree:
 \begin{center}
-\begin{tikzpicture}[level distance=1.8cm,
-  level 1/.style={sibling distance=3.6cm},
-  level 2/.style={sibling distance=1.8cm}]
-  \node[MyNode] {}
-    child {
-      node[MyNode] {}
-      child {
-        node[MyNode] {$l_0$}
-        edge from parent node[left] {$i_0 = 0$}
-      }
-      child {
-        node[MyNode] {$l_1$}
-        edge from parent node[right] {$i_0 = 1$}
-      }
-      edge from parent node[left] {$i_1 = 0$}
-    }
-    child {
-      node[MyNode] {}
-      child {
-        node[MyNode] {$l_2$}
-        edge from parent node[left] {$i_0 = 0$}
-      }
-      child {
-        node[MyNode] {$l_3$}
-        edge from parent node[right] {$i_0 = 1$}
-      }
-      edge from parent node[right] {$i_1 = 1$}
-    };
-\end{tikzpicture}
+\begin{forest}
+  for tree={circle,draw,inner sep=0,minimum size=0.6cm},
+  selected/.style={edge=red,draw=red}
+  [,selected
+    [,
+      [,
+        [$x_0$],
+        [$x_1$]
+      ],
+      [,
+        [$x_2$],
+        [$x_3$]
+      ]
+    ],
+    [,selected,
+      [,selected,
+        [$x_4$],
+        [$x_5$,selected]
+      ],
+      [,
+        [$x_6$],
+        [$x_7$]
+      ]
+    ]
+  ]
+\end{forest}
 \end{center}
-and construct the leaf polynomials as
-\begin{alignat*}{2}
-  l_0 &\coloneqq (1 - i_1)(1 - i_0) &&= 1 - i_0 - i_1 + i_0 i_1, \\
-  l_1 &\coloneqq (1 - i_1)(i_0) &&= i_0 - i_0 i_1, \\
-  l_2 &\coloneqq (i_1)(1 - i_0) &&= i_1 - i_0 i_1, \\
-  l_3 &\coloneqq (i_1)(i_0) &&= i_0 i_1.
-\end{alignat*}
+Now, we will describe a few methods of random access which leverage this mental model.
 
-Once we have these leaf polynomials, the result of the lookup is
-\begin{equation}
-  \sum_{j=0}^{n-1} x_j l_j
-\end{equation}
 
-TODO: Describe trick to get an extra layer for cheap.
+\subsection{Repeated selection method}
 
-TODO: Discuss lookups for $r$-tuples of field elements.
+First, we could perform a selection operation (\autoref{sec:selection}) for each non-leaf node. In the example, we would perform the following operations:
+\begin{center}
+\begin{forest}
+  for tree={draw,inner sep=2mm,minimum size=0.6cm},
+  [{$r = \operatorname{sel}(b_2, z_0, z_1)$},
+    [{$z_0 = \operatorname{sel}(b_1, y_0, y_1)$},
+      [{$y_0 = \operatorname{sel}(b_0, x_0, x_1)$},
+        [$x_0$],
+        [$x_1$]
+      ],
+      [{$y_1 = \operatorname{sel}(b_0, x_2, x_3)$},
+        [$x_2$],
+        [$x_3$]
+      ]
+    ],
+    [{$z_1 = \operatorname{sel}(b_1, y_2, y_3)$},
+      [{$y_2 = \operatorname{sel}(b_0, x_4, x_5)$},
+        [$x_4$],
+        [$x_5$]
+      ],
+      [{$y_3 = \operatorname{sel}(b_0, x_6, x_7)$},
+        [$x_6$],
+        [$x_7$]
+      ]
+    ]
+  ]
+\end{forest}
+\end{center}
+after which the root node $r$ will hold $x_i$.
+
+
+\subsection{Sum-of-conditions method}
+
+Alternatively, we could construct an expression for each node which encodes the conditions under which that node, or one of its ancestors, is selected. In the example, we have
+\begin{center}
+\begin{forest}
+  for tree={draw,inner sep=2mm,minimum size=0.6cm},
+  [{$1$},
+    [{$1 - b_2$},
+      [{$(1 - b_2) (1 - b_1)$},
+        [{\ldots}],
+        [{\ldots}]
+      ],
+      [{$(1 - b_2) b_1$},
+        [{\ldots}],
+        [{\ldots}]
+      ]
+    ],
+    [{$b_2$},
+      [{$b_2 (1 - b_1)$},
+        [{\ldots}],
+        [{\ldots}]
+      ],
+      [{$b_2 b_1$},
+        [{\ldots}],
+        [{\ldots}]
+      ]
+    ]
+  ]
+\end{forest}
+\end{center}
+Then to access $x_i$, we take the sum of each leaf multiplied by its selection condition. Note that this final multiplication is free, given our assumption that $(x_0, \dots, x_n)$ are constants.
+
+Computing these conditions naively would require $n - 1$ constraints, since we would perform one multiplication per non-root node. We can achieve much greater efficiency, however, by distributing the products and reusing intermediate products. In the example, we would compute just four products: $b_0 b_1$, $b_0 b_2$, $b_1 b_2$, and $b_0 (b_1 b_2)$. In general, the cost of this approach is $2^k - k - 1$ constraints.
+
+
+\subsection{Hybrid method}
+
+Unfortunately, both of the aforementioned methods cost $\mathcal{O}(n)$ constraints. It turns out that we can do better by combining them. Pick some $l, m$ such that $l + m = k$. We divide our conceptual tree into subtrees of size $2^l$, and apply the sum-of-conditions method to each subtree. This costs $2^l - l - 1$ constraints independent of the number of subtrees, since each subtree uses the exact same set of conditions.
+
+Next, we invoke the selection method to select one of the $2^m$ subtree results. This costs another $2^m - 1$ constraints, for a total cost of $2^m + 2^l - l - 2$. By picking $l = m = k/2$, we obtain a total cost of $\mathcal{O}(\sqrt{n})$ constraints.
 
 
 \section{Embedded curve operations}
