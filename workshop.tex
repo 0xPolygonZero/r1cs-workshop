@@ -248,7 +248,7 @@ Recall the addition law for twisted Edwards curves,
 \begin{equation}
   (x_1, y_1) + (x_2, y_2) = \left( \frac{x_1 y_1 + y_1 x_2}{1 + d x_1 x_2 y_1 y_2}, \frac{y_1 y_2 - a x_1 x_2}{1 - d x_1 x_2 y_1 y_2} \right).
 \end{equation}
-Applying the law directly takes 7 constraints: 4 for the products in the numerators, one for the product in the denominator, and one\footnote{In general, computing a quotient $q \coloneqq x / y$ takes two constraints: $(y) (y_\mathrm{inv}) = (1)$ and $(x) (y_\mathrm{inv}) = (q)$. In this case, however, we can multiply both sides by the denominator since we know it will never be zero. This yields a single constraint: $(q) (y) = (x)$.} for each of the two quotients.
+Applying the law directly takes 7 constraints: 4 for the products in the numerators, one for the product in the denominator, and one\footnote{In general, computing a quotient $q \coloneqq x / y$ takes two constraints: $(y) (y_\mathrm{inv}) = (1)$ and $(x) (y_\mathrm{inv}) = (q)$. In this case, however, we can multiply both sides by the denominator since we know it will never be zero. This yields a single constraint: $(q) (y) = (x)$.} for each of the two quotients. This can be optimized to 6 constraints as described in \cite{hopwood2016zcash}.
 
 However, the operation becomes much cheaper when of the points is constant. Without loss of generality, suppose $(x_1, y_1)$ is constant while $(x_2, y_2)$ is variable. Then the numerators become ``free'' linear combinations, while the denominators require a single multiplication. The quotients add 2 constraints as before, resulting in 3 constraints total.
 
@@ -289,7 +289,7 @@ We can generalize \autoref{eq:mult-by-doubling} by decomposing $s$ into its base
 \end{equation}
 As before, $[(2^w)^i] p$ can be precomputed for each $i$. We can go a step further by precomputing $[s_i] [(2^w)^i] p$ for each of $2^w$ possible values of $s_i$, then looking up the relevant value using the method described in \autoref{sec:random-access-hybrid}.
 
-In practice, a window size of 3 seems optimal. If we configure our random access gadget with $l = 2$ and $m = 1$, the lookup costs 3 constraints per 3-bit window.\footnote{This is one more than the formula in \autoref{sec:random-access-hybrid} would imply, since the selection operation needs to be done for both coordinates of the curve point.} The addition adds another 7 constraints per window, for a total cost of 10 constraints per window, or $3.33$ constraints per bit.
+In practice, a window size of 3 seems optimal. If we configure our random access gadget with $l = 2$ and $m = 1$, the lookup costs 3 constraints per 3-bit window.\footnote{This is one more than the formula in \autoref{sec:random-access-hybrid} would imply, since the selection operation needs to be done for both coordinates of the curve point.} The addition adds another 6 constraints per window, for a total cost of 9 constraints per window, or $3$ constraints per bit.
 
 
 \section{2x2 switch}
