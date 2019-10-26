@@ -1,5 +1,6 @@
 \documentclass{article}
 
+\usepackage[margin=1.35in]{geometry}
 \usepackage{algorithm2e}
 \usepackage{amsfonts}
 \usepackage{amsmath}
@@ -32,6 +33,8 @@
 
 % Tweak autoref names to use capitals.
 \renewcommand{\sectionautorefname}{Section}
+\renewcommand{\subsectionautorefname}{Section}
+\renewcommand{\subsubsectionautorefname}{Section}
 
 \begin{document}
 
@@ -42,7 +45,7 @@
 
 \section{Introduction}
 
-A rank one constraint system is a set of relations $(\vec{a}\cdot \vec{z})\times(\vec{b} \cdot \vec{z}) = \vec{c}\cdot \vec{z}$ where $\vec{a}, \vec{b}, \vec{c}$ are row vectors and $\vec{z}$ is a column vector defined over $\mathbb{F}_p$: the set of integers modulo $p$ with the operations $+$ and $\times$. 
+A rank one constraint system is a set of relations $(\vec{a}\cdot \vec{z})\times(\vec{b} \cdot \vec{z}) = \vec{c}\cdot \vec{z}$ where $\vec{a}, \vec{b}, \vec{c}$ are row vectors and $\vec{z}$ is a column vector defined over $\mathbb{F}_p$: the set of integers modulo $p$ with $+$ and $\times$. 
 
 The $\vec{z}$ vector encodes the instance and witness variables, and the $\vec{a}$, $\vec{b}$, $\vec{c}$ vectors enforce a constraint: a relationship between linear combinations of members of $\vec{z}$. An example of a simple constraint is:
 
@@ -76,7 +79,7 @@ The $\vec{z}$ vector encodes the instance and witness variables, and the $\vec{a
   \end{align}
   
   \begin{align}
-	(x_{1}) (x_{2}) = 1 \implies x_{1} = x_{2}^{-1}
+	(x_{1}) (x_{2}) = 1
   \end{align}
 
 \section{Multiplicative inverse} \label{sec:inverse}
@@ -157,7 +160,7 @@ We can compute this as
 \begin{equation} \label{eq:selection}
   z \coloneqq x + s(y - x).
 \end{equation}
-This requires two constraints: one ``is boolean'' asertion (\autoref{eq:boolean}), assuming $s$ was not already known to be boolean, and another for the multiplication.
+This requires two constraints: one ``is boolean'' assertion (\autoref{eq:boolean}), assuming $s$ was not already known to be boolean, and another for the multiplication.
 
 
 \section{Random access} \label{sec:random-access}
@@ -268,7 +271,7 @@ Then to access $x_i$, we take the sum of each leaf multiplied by its selection c
 Computing these conditions naively would require $n - 1$ constraints, since we would perform one multiplication per non-root node. We can achieve much greater efficiency, however, by distributing the products and reusing intermediate products. In the example, we would compute just four products: $b_0 b_1$, $b_0 b_2$, $b_1 b_2$, and $b_0 (b_1 b_2)$. In general, the cost of this approach is $2^k - k - 1$ constraints.
 
 
-\subsection{Hybrid method}
+\subsection{Hybrid method} \label{sec:random-access-hybrid}
 
 Unfortunately, both of the aforementioned methods cost $\mathcal{O}(n)$ constraints. It turns out that we can do better by combining them. Pick some $l, m$ such that $l + m = k$. We divide our conceptual tree into subtrees of size $2^l$, and apply the sum-of-conditions method to each subtree. This costs $2^l - l - 1$ constraints independent of the number of subtrees, since each subtree uses the exact same set of conditions.
 
@@ -287,7 +290,7 @@ Recall the addition law for twisted Edwards curves,
 \begin{equation}
   (x_1, y_1) + (x_2, y_2) = \left( \frac{x_1 y_1 + y_1 x_2}{1 + d x_1 x_2 y_1 y_2}, \frac{y_1 y_2 - a x_1 x_2}{1 - d x_1 x_2 y_1 y_2} \right).
 \end{equation}
-Applying the law directly takes 7 constraints: 4 for the products in the numerators, one for the product in the denominator, and one\footnote{In general, computing a quotient $q \coloneqq x / y$ takes two constraints: $(y) (y_\mathrm{inv}) = (1)$ and $(x) (y_\mathrm{inv}) = (q)$. In this case, however, we can multiply both sides by the denominator since we know it will never be zero. This yields a single constraint: $(q) (y) = (x)$.} for each of the two quotients.
+Applying the law directly takes 7 constraints: 4 for the products in the numerators, one for the product in the denominator, and one\footnote{In general, computing a quotient $q \coloneqq x / y$ takes two constraints: $(y) (y_\mathrm{inv}) = (1)$ and $(x) (y_\mathrm{inv}) = (q)$. In this case, however, we can multiply both sides by the denominator since we know it will never be zero. This yields a single constraint: $(q) (y) = (x)$.} for each of the two quotients. This can be optimized to 6 constraints as described in \cite{hopwood2016zcash}.
 
 However, the operation becomes much cheaper when of the points is constant. Without loss of generality, suppose $(x_1, y_1)$ is constant while $(x_2, y_2)$ is variable. Then the numerators become ``free'' linear combinations, while the denominators require a single multiplication. The quotients add 2 constraints as before, resulting in 3 constraints total.
 
@@ -326,9 +329,9 @@ We can generalize \autoref{eq:mult-by-doubling} by decomposing $s$ into its base
 \begin{equation}
   [s] p = \sum_{i=0}^{n/w-1} [s_i] [(2^w)^i] p.
 \end{equation}
-As before, $[(2^w)^i] p$ can be precomputed for each $i$. We can go a step further by precomputing $[s_i] [(2^w)^i] p$ for each of $2^w$ possible values of $s_i$, then looking up the relevant value using the a method from \autoref{sec:random-access}.
+As before, $[(2^w)^i] p$ can be precomputed for each $i$. We can go a step further by precomputing $[s_i] [(2^w)^i] p$ for each of $2^w$ possible values of $s_i$, then looking up the relevant value using the method described in \autoref{sec:random-access-hybrid}.
 
-TODO: Discuss costs of this approach.
+In practice, a window size of 3 seems optimal. If we configure our random access gadget with $l = 2$ and $m = 1$, the lookup costs 3 constraints per 3-bit window.\footnote{This is one more than the formula in \autoref{sec:random-access-hybrid} would imply, since the selection operation needs to be done for both coordinates of the curve point.} The addition adds another 6 constraints per window, for a total cost of 9 constraints per window, or $3$ constraints per bit.
 
 
 \section{2x2 switch}
