@@ -11,6 +11,10 @@
 \usetikzlibrary{arrows}
 \usetikzlibrary{positioning}
 
+\let\oldhat\hat
+\renewcommand{\vec}[1]{\mathbf{#1}}
+\renewcommand{\hat}[1]{\oldhat{\mathbf{#1}}}
+
 \title{R1CS Programming \\ \large ZK0x04 Workshop Notes}
 \author{Daniel Lubarov \and Brendan Farmer}
 \date{\today}
@@ -36,6 +40,44 @@
 {\hypersetup{hidelinks} \tableofcontents}
 \newpage
 
+\section{Introduction}
+
+A rank one constraint system is a set of relations $(\vec{a}\cdot \vec{z})\times(\vec{b} \cdot \vec{z}) = \vec{c}\cdot \vec{z}$ where $\vec{a}, \vec{b}, \vec{c}$ are row vectors and $\vec{z}$ is a column vector defined over $\mathbb{F}_p$: the set of integers modulo $p$ with the operations $+$ and $\times$. 
+
+The $\vec{z}$ vector encodes the instance and witness variables, and the $\vec{a}$, $\vec{b}$, $\vec{c}$ vectors enforce a constraint: a relationship between linear combinations of members of $\vec{z}$. An example of a simple constraint is:
+
+  \begin{align}
+      \begin{bmatrix}
+	  0 & 1 & 0
+	\end{bmatrix}
+    \begin{bmatrix}
+	  1 \\
+	  x_{1} \\
+	  x_{2}
+	\end{bmatrix}
+	\times
+	 \begin{bmatrix}
+	  0 & 0 & 1
+	\end{bmatrix}
+    \begin{bmatrix}
+	  1 \\
+	  x_{1} \\
+	  x_{2}
+	\end{bmatrix}
+	=
+	\begin{bmatrix}
+	  1 & 0 & 0
+	\end{bmatrix}
+    \begin{bmatrix}
+	  1 \\
+	  x_{1} \\
+	  x_{2}
+	\end{bmatrix}
+  \end{align}
+  
+  \begin{align}
+	(x_{1}) (x_{2}) = 1 \implies x_{1} = x_{2}^{-1}
+  \end{align}
 
 \section{Multiplicative inverse} \label{sec:inverse}
 
